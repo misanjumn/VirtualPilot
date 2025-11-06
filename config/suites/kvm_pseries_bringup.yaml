@@ -1,0 +1,16 @@
+name: kvm_pseries_bringup
+script: guest_bringup
+params:
+  accelerator: kvm
+  machine: pseries
+  memory: 4096
+  vcpus: 4
+  qcow_path: ./guests/qcows/fedora42.qcow2
+  os_variant: fedora41
+  name: fedora42-virtualpilot-kvm-pseries
+  username: root
+  password: "123456"
+  host_kernel: false
+  kernel: null
+  initrd: null
+  cmdline: null

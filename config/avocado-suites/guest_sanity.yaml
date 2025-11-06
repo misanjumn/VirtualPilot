@@ -1,0 +1,3 @@
+suites_to_run:
+  - config/suites/kvm_pseries_bringup.yaml
+  - config/suites/kvm_pseries_bringdown.yaml
