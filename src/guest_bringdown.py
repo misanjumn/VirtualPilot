@@ -62,6 +62,77 @@ def virsh_undefine(cfg):
         return False, f"Unexpected error in undefine: {str(e)}"
 
 
+def restore_kvm(cfg):
+    """
+    Enable KVM modules on Host system.
+    """
+
+    try:
+        print("Restoring KVM modules...")
+
+        # Step 1: Remove blacklist config file
+        print("Removing KVM blacklist configuration...")
+        result = subprocess.run(
+            "rm -rf /etc/modprobe.d/disable-kvm.conf",
+            shell=True,
+            capture_output=True,
+            text=True
+        )
+        if result.returncode != 0:
+            return False, f"Failed to remove blacklist config: {result.stderr}"
+
+        # Step 2: Load kvm module
+        print("Loading kvm module...")
+        result = subprocess.run(
+            ["modprobe", "kvm"],
+            capture_output=True,
+            text=True
+        )
+        if result.returncode != 0:
+            return False, f"Failed to load kvm module: {result.stderr}"
+
+        # Step 3: Load kvm_hv module
+        print("Loading kvm_hv module...")
+        result = subprocess.run(
+            ["modprobe", "kvm_hv"],
+            capture_output=True,
+            text=True
+        )
+        if result.returncode != 0:
+            return False, f"Failed to load kvm_hv module: {result.stderr}"
+
+        # Step 4: Verify KVM modules are loaded
+        print("Verifying KVM is restored...")
+        result = subprocess.run(
+            "lsmod | grep kvm",
+            shell=True,
+            capture_output=True,
+            text=True
+        )
+
+        # grep returns 0 when something is found (which is what we want)
+        if result.returncode != 0:
+            return False, "KVM modules not loaded after restore attempt"
+
+        print(f"  Loaded modules:\n{result.stdout}")
+
+        # Step 5: Restart libvirtd
+        print("Restarting libvirtd...")
+        result = subprocess.run(
+            ["systemctl", "restart", "libvirtd"],
+            capture_output=True,
+            text=True
+        )
+
+        if result.returncode != 0:
+            return False, f"Failed to restart libvirtd: {result.stderr}"
+
+        return True, None
+
+    except Exception as e:
+        return False, f"Error restoring KVM: {str(e)}"
+
+
 def run_tool(config: dict):
     """
     guest_bringdown.py
@@ -76,12 +147,8 @@ def run_tool(config: dict):
     cfg = DEFAULTS.copy()
     cfg.update({k: v for k, v in config.items() if v is not None})
 
-    status, result = virsh_shutdown(cfg)
-
-    if not status:
-        print(f"Graceful shutdown failed: {result}")
+    if cfg["accelerator"] == "tcg":
         destroy_status, destroy_result = virsh_destroy(cfg)
-
         if not destroy_status:
             status = False
             error = f"Shutdown failed: {result}, Destroy also failed: {destroy_result}"
@@ -89,13 +156,29 @@ def run_tool(config: dict):
             status = True
             error = None
     else:
-        status = True
-        error = None
+        status, result = virsh_shutdown(cfg)
+        if not status:
+            print(f"Graceful shutdown failed: {result}")
+            destroy_status, destroy_result = virsh_destroy(cfg)
+            if not destroy_status:
+                status = False
+                error = f"Shutdown failed: {result}, Destroy also failed: {destroy_result}"
+            else:
+                status = True
+                error = None
+        else:
+            status = True
+            error = None
 
     undefine_status, undefine_result = virsh_undefine(cfg)
 
     if not undefine_status:
         status = False
         error = f"Undefine failed: {undefine_result}"
+
+    if cfg["accelerator"] == "tcg":
+        status, error = restore_kvm(cfg)
+        if not status:
+            return status, error
 
     return status, error

@@ -26,6 +26,69 @@ DEFAULTS = {
 }
 
 
+def disable_kvm(cfg):
+    """
+    Disable KVM modules on the host system.
+    """
+    
+    try:
+        print("Disabling KVM modules...")
+
+        # Step 1: Add blacklist entries using echo
+        print("Adding blacklist entries to /etc/modprobe.d/disable-kvm.conf")
+        result = subprocess.run(
+            'echo "install kvm /bin/false" >> /etc/modprobe.d/disable-kvm.conf',
+            shell=True,
+            capture_output=True,
+            text=True
+        )
+        if result.returncode != 0:
+            return False, f"Failed to blacklist kvm: {result.stderr}"
+        result = subprocess.run(
+            'echo "install kvm_hv /bin/false" >> /etc/modprobe.d/disable-kvm.conf',
+            shell=True,
+            capture_output=True,
+            text=True
+        )
+        if result.returncode != 0:
+            return False, f"Failed to blacklist kvm_hv: {result.stderr}"
+
+        # Step 2: Remove kvm_hv module
+        print("Removing kvm_hv module...")
+        subprocess.run(["modprobe", "-r", "kvm_hv"], capture_output=True)
+
+        # Step 3: Remove kvm module
+        print("Removing kvm module...")
+        subprocess.run(["modprobe", "-r", "kvm"], capture_output=True)
+
+        # Step 4: Verify KVM modules are not loaded
+        print("Verifying KVM is disabled...")
+        result = subprocess.run(
+            "lsmod | grep kvm",
+            shell=True,
+            capture_output=True,
+            text=True
+        )
+        if result.returncode == 0:
+            return False, "KVM modules still loaded"
+
+        # Step 5: Restart libvirtd
+        print("Restarting libvirtd...")
+        result = subprocess.run(
+            ["systemctl", "restart", "libvirtd"],
+            capture_output=True,
+            text=True
+        )
+
+        if result.returncode != 0:
+            return False, f"Failed to restart libvirtd: {result.stderr}"
+
+        return True, None
+
+    except Exception as e:
+        return False, f"Error disabling KVM: {str(e)}"
+
+
 def console_login(cfg, log_file):
     """
     Get into guest console via - virsh console <vm>
@@ -84,7 +147,6 @@ def virt_install(cfg):
             "virt-install",
             "--connect=qemu:///system",
             "--hvm",
-            f"--accelerate" if accel == "kvm" else "",
             f"--name={cfg['name']}",
             f"--machine={cfg['machine']}",
             f"--memory={cfg['memory']}",
@@ -101,6 +163,9 @@ def virt_install(cfg):
             f"--boot=emulator=/usr/bin/qemu-system-ppc64"
         ]
 
+        if accel == "kvm":
+            virt_install_cmd.append("--accelerate")
+
         if cfg["kernel"] and cfg["initrd"] and cfg["cmdline"]:
             virt_install_cmd.extend([
                 "--boot",
@@ -110,6 +175,7 @@ def virt_install(cfg):
         print(f"Starting guest VM: {cfg['name']}")
         virt_install_cmd_string = " ".join(virt_install_cmd)
         print(f"virt-install command: {virt_install_cmd_string}")
+        time.sleep(2)
 
         # Start virt-install in background
         virt_install_process = subprocess.Popen(
@@ -119,7 +185,11 @@ def virt_install(cfg):
             text=True
         )
         # Check if process has ended
-        time.sleep(3)
+        if cfg["accelerator"] == "tcg":
+            time.sleep(10)
+        else:
+            time.sleep(3)
+
         virt_install_process.poll()
         if virt_install_process.returncode is not None and virt_install_process.returncode != 0:
             stderr = virt_install_process.stderr.read()
@@ -138,8 +208,7 @@ def virt_install(cfg):
 
 def check_call_traces(cfg, log_file):
     """
-    Check if any call traces are present in the console log.
-    Returns True if log is clean, False if issues found.
+    Check if any call traces are present in the console log
     """
 
     # Define patterns to search for
@@ -242,6 +311,12 @@ def run_tool(config: dict):
     log_file.flush()
 
     try:
+        # Disable KVM module in case of tcg mode
+        if cfg["accelerator"] == "tcg":
+            status, error = disable_kvm(cfg)
+            if not status:
+                return status, error
+
         # Start VM using virt_install function
         status, result = virt_install(cfg)
         if not status:

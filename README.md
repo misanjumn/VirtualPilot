@@ -18,11 +18,18 @@ Lightweight Automation Framework for booting and validating virtual guests. It o
     - Undefine guest
 
 ## Default yaml files created (for testing purpose): config/suites/*.yaml
+kvm pseries guest
 1. kvm_pseries_bringup.yaml
     - accelerator type: kvm
     - machine: pseries
-    - os-variant: fedora41
 2. kvm_pseries_bringdown.yaml
+    - same as above, uninstall suite
+
+tcg pseries guest
+1. tcg_pseries_bringup.yaml
+    - accelerator type: tcg
+    - machine: pseries
+2. tcg_pseries_bringdown.yaml
     - same as above, uninstall suite
 
 ## Command to run - single suite style

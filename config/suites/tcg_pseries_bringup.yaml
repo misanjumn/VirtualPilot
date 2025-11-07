@@ -1,0 +1,17 @@
+name: tcg_pseries_bringup
+script: guest_bringup
+params:
+  accelerator: tcg
+  machine: pseries
+  memory: 4096
+  vcpus: 4
+  qcow_path: ./guests/qcows/fedora42.qcow2
+  os_variant: fedora41
+  name: fedora42-virtualpilot-tcg-pseries
+  username: root
+  password: "123456"
+  host_kernel: false
+  kernel: null
+  initrd: null
+  cmdline: null
+  boot_timeout: 240

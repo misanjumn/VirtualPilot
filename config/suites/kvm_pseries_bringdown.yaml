@@ -2,3 +2,4 @@ name: kvm_pseries_bringdown
 script: guest_bringdown
 params:
   name: fedora42-virtualpilot-kvm-pseries
+  accelerator: kvm
