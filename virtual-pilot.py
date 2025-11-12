@@ -7,7 +7,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--config",
-        default="config/avocado_suite.yaml",
+        default="config/suites/kvm_pseries_bringup.yaml",
         help="Path to YAML file listing which tests to run"
     )
     args = parser.parse_args()

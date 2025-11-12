@@ -1,5 +1,6 @@
 name: kvm_pseries_bringdown
-script: guest_bringdown
+nested: false
+script: src/guest_bringdown
 params:
-  name: fedora42-virtualpilot-kvm-pseries
+  name: fedora43-virtualpilot-kvm-pseries
   accelerator: kvm

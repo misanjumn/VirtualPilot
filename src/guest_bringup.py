@@ -23,6 +23,7 @@ DEFAULTS = {
     'password_prompt': '[Pp]assword: ',
     'shell_prompt': '.*[#$] ',
     'boot_timeout': 40,
+    'virt_install_timeout': 10,
 }
 
 
@@ -91,10 +92,10 @@ def disable_kvm(cfg):
 
 def console_login(cfg, log_file):
     """
-    Get into guest console via - virsh console <vm>
+    Get into guest console via - virsh start <vm> --console
     """
 
-    console_cmd = f"virsh console {cfg['name']}"
+    console_cmd = f"virsh start {cfg['name']} --console"
 
     try:
         print(f"Starting console with: {console_cmd}")
@@ -172,6 +173,8 @@ def virt_install(cfg):
                 f"kernel={cfg['kernel']},initrd={cfg['initrd']},cmdline='{cfg['cmdline']}'"
             ])
 
+        virt_install_cmd.append("--noreboot")
+
         print(f"Starting guest VM: {cfg['name']}")
         virt_install_cmd_string = " ".join(virt_install_cmd)
         print(f"virt-install command: {virt_install_cmd_string}")
@@ -184,19 +187,13 @@ def virt_install(cfg):
             stderr=subprocess.PIPE,
             text=True
         )
-        # Check if process has ended
-        if cfg["accelerator"] == "tcg":
-            time.sleep(10)
-        else:
-            time.sleep(3)
+        # Wait for process to complete or timeout
+        time.sleep(cfg['virt_install_timeout'])
 
         virt_install_process.poll()
         if virt_install_process.returncode is not None and virt_install_process.returncode != 0:
             stderr = virt_install_process.stderr.read()
             return False, stderr
-
-        # Wait a moment for VM to be created
-        time.sleep(2)
 
         return True, virt_install_process
 

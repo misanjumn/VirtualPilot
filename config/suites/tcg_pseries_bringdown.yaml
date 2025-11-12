@@ -1,5 +1,6 @@
 name: tcg_pseries_bringdown
-script: guest_bringdown
+nested: false
+script: src/guest_bringdown
 params:
-  name: fedora42-virtualpilot-tcg-pseries
+  name: fedora43-virtualpilot-tcg-pseries
   accelerator: tcg
