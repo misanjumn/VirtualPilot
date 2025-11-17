@@ -5,6 +5,8 @@ import logging
 
 DEFAULTS = {
     "name": "fedora42-virtualpilot-kvm-pseries",
+    "accelerator": "kvm",
+    "disable_kvm": False
 }
 
 
@@ -176,7 +178,7 @@ def run_tool(config: dict):
         status = False
         error = f"Undefine failed: {undefine_result}"
 
-    if cfg["accelerator"] == "tcg":
+    if cfg["disable_kvm"] == True:
         status, error = restore_kvm(cfg)
         if not status:
             return status, error

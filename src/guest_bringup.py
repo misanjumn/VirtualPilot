@@ -24,6 +24,7 @@ DEFAULTS = {
     'shell_prompt': '.*[#$] ',
     'boot_timeout': 40,
     'virt_install_timeout': 10,
+    'disable_kvm': False
 }
 
 
@@ -166,6 +167,8 @@ def virt_install(cfg):
 
         if accel == "kvm":
             virt_install_cmd.append("--accelerate")
+        if accel == "tcg":
+            virt_install_cmd.append("--virt-type qemu")
 
         if cfg["kernel"] and cfg["initrd"] and cfg["cmdline"]:
             virt_install_cmd.extend([
@@ -309,7 +312,7 @@ def run_tool(config: dict):
 
     try:
         # Disable KVM module in case of tcg mode
-        if cfg["accelerator"] == "tcg":
+        if cfg["disable_kvm"] == True:
             status, error = disable_kvm(cfg)
             if not status:
                 return status, error
