@@ -29,6 +29,28 @@ DEFAULTS = {
 }
 
 
+def restart_libvirtd(cfg):
+    """
+    Restart libvirtd service on the host system.
+    """
+
+    try:
+        print("Restarting libvirtd service...")
+        result = subprocess.run(
+            ["systemctl", "restart", "libvirtd"],
+            capture_output=True,
+            text=True
+        )
+
+        if result.returncode != 0:
+            return False, f"Failed to restart libvirtd: {result.stderr}"
+
+        return True, None
+
+    except Exception as e:
+        return False, f"Error restarting libvirtd: {str(e)}"
+
+
 def disable_kvm(cfg):
     """
     Disable KVM modules on the host system.
@@ -170,7 +192,7 @@ def virt_install(cfg):
         if accel == "kvm":
             virt_install_cmd.append("--accelerate")
         if accel == "tcg":
-            virt_install_cmd.append("--virt-type qemu")
+            virt_install_cmd.append("--virt-type=qemu")
 
         if cfg["kernel"] and cfg["initrd"] and cfg["cmdline"]:
             virt_install_cmd.extend([
@@ -313,6 +335,11 @@ def run_tool(config: dict):
     log_file.flush()
 
     try:
+        # Restart libvirtd to ensure a clean state
+        status, error = restart_libvirtd(cfg)
+        if not status:
+            return status, error
+
         # Disable KVM module in case of tcg mode
         if cfg["disable_kvm"] == True:
             status, error = disable_kvm(cfg)

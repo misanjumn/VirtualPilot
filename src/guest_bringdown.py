@@ -6,7 +6,7 @@ import logging
 DEFAULTS = {
     "name": "fedora43-virtualpilot-kvm-pseries",
     "accelerator": "kvm",
-    "disable_kvm": False
+    "enable_disable_kvm": False
 }
 
 
@@ -153,7 +153,7 @@ def run_tool(config: dict):
         destroy_status, destroy_result = virsh_destroy(cfg)
         if not destroy_status:
             status = False
-            error = f"Shutdown failed: {result}, Destroy also failed: {destroy_result}"
+            error = f"Destroy failed: {destroy_result}"
         else:
             status = True
             error = None
@@ -178,7 +178,7 @@ def run_tool(config: dict):
         status = False
         error = f"Undefine failed: {undefine_result}"
 
-    if cfg["disable_kvm"] == True:
+    if cfg["enable_disable_kvm"] == True:
         status, error = restore_kvm(cfg)
         if not status:
             return status, error
