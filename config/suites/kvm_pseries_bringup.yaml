@@ -4,8 +4,9 @@ script: src/guest_bringup
 params:
   accelerator: kvm
   machine: pseries
-  memory: 4096
-  vcpus: 8
+  memory: 8096
+  cpu: POWER11
+  vcpus: 16
   qcow_path: ./guests/qcows/large-fedora43.qcow2
   os_variant: fedora41
   name: fedora43-virtualpilot-kvm-pseries

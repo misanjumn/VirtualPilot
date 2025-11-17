@@ -4,7 +4,7 @@ import logging
 
 
 DEFAULTS = {
-    "name": "fedora42-virtualpilot-kvm-pseries",
+    "name": "fedora43-virtualpilot-kvm-pseries",
     "accelerator": "kvm",
     "disable_kvm": False
 }
