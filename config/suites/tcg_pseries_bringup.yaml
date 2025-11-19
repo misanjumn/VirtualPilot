@@ -12,6 +12,8 @@ params:
   name: fedora43-virtualpilot-tcg-pseries
   username: root
   password: "123456"
+  qemu-extra-args: ""
+  features: ""
   host_kernel: false
   kernel: null
   initrd: null

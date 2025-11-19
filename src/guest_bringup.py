@@ -20,6 +20,8 @@ DEFAULTS = {
     'network_bridge': 'virbr0',
     'username': 'root',
     'password': '123456',
+    'qemu-extra-args': "",
+    'features': "",
     'login_prompt': '\\w+ login: ',
     'password_prompt': '[Pp]assword: ',
     'shell_prompt': '.*[#$] ',
@@ -201,6 +203,11 @@ def virt_install(cfg):
             ])
 
         virt_install_cmd.append("--noreboot")
+
+        if cfg["qemu-extra-args"]:
+            virt_install_cmd.append(f"--qemu-commandline={cfg['qemu-extra-args']}")
+        if cfg["features"]:
+            virt_install_cmd.append(f"--features={cfg['features']}")
 
         print(f"Starting guest VM: {cfg['name']}")
         virt_install_cmd_string = " ".join(virt_install_cmd)

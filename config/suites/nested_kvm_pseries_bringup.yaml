@@ -23,6 +23,7 @@ params:
   name: fedora43-virtualpilot-kvm-pseries
   username: root
   password: "123456"
+  qemu-extra-args: ""
   host_kernel: false
   kernel: null
   initrd: null
