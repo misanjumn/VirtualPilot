@@ -2,6 +2,7 @@
 
 import argparse
 from orchestrator import run_suite_from_config
+import sys
 
 def main():
     parser = argparse.ArgumentParser()
@@ -14,7 +15,8 @@ def main():
 
     result, error = run_suite_from_config(args.config)
     if not result:
-        print(f"\nTest failed: {args.config}\nFailure: {error}")
+        print(f"\nVirtualPilot Suite Failed: {args.config}\nFailure: {error}")
+        sys.exit(error)
 
 if __name__ == "__main__":
     main()

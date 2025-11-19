@@ -1,0 +1,17 @@
+name: nested_kvm_pseries_bringup
+nested: true
+script: guest_bringdown
+params:
+  l0_name: fedora43-virtualpilot-tcg-pseries
+  l0_username: root
+  l0_password: "123456"
+  l0_location: /home/VirtualPilot/
+  host_virtualpilot: virtual-pilot.py
+  host_orchestrator: orchestrator.py
+  nested_guest_image: guests/qcows/small-fedora43.qcow2
+  host_script: src/guest_bringdown.py
+  host_suite: config/suites/nested_kvm_pseries_bringdown.yaml
+  nested_guest_image: guests/qcows/small-fedora43.qcow2
+
+  name: fedora43-virtualpilot-kvm-pseries
+  accelerator: kvm
