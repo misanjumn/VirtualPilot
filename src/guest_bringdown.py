@@ -138,9 +138,9 @@ def restore_kvm(cfg):
 def run_tool(config: dict):
     """
     guest_bringdown.py
-    1. Shutdown guest
+    1. Shutdown guest (optional)
     2. Destroy guest
-    3. Undefine guest
+    3. Undefine guest              
     """
     status = True
     error = None
@@ -149,38 +149,26 @@ def run_tool(config: dict):
     cfg = DEFAULTS.copy()
     cfg.update({k: v for k, v in config.items() if v is not None})
 
-    if cfg["accelerator"] == "tcg":
-        destroy_status, destroy_result = virsh_destroy(cfg)
-        if not destroy_status:
-            status = False
-            error = f"Destroy failed: {destroy_result}"
-        else:
-            status = True
-            error = None
-    else:
-        status, result = virsh_shutdown(cfg)
-        if not status:
-            print(f"Graceful shutdown failed: {result}")
-            destroy_status, destroy_result = virsh_destroy(cfg)
-            if not destroy_status:
-                status = False
-                error = f"Shutdown failed: {result}, Destroy also failed: {destroy_result}"
-            else:
-                status = True
-                error = None
-        else:
-            status = True
-            error = None
+    destroy_status, destroy_result = virsh_destroy(cfg)
+    if not destroy_status:
+        error = f"Destroy failed: {destroy_result}"
+        status = False
 
     undefine_status, undefine_result = virsh_undefine(cfg)
-
     if not undefine_status:
+        if status is False:
+            error += f" | Undefine failed: {undefine_result}"
+        else:
+            error = f"Undefine failed: {undefine_result}"
         status = False
-        error = f"Undefine failed: {undefine_result}"
 
     if cfg["enable_disable_kvm"] == True:
-        status, error = restore_kvm(cfg)
-        if not status:
-            return status, error
+        disble_kvm_status, disable_kvm_error = restore_kvm(cfg)
+        if not disble_kvm_status:
+            if status is False:
+                error += f" | Restore KVM failed: {disable_kvm_error}"
+            else:
+                error = f"Restore KVM failed: {disable_kvm_error}"
+            status = False
 
     return status, error
