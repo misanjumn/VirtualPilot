@@ -1,0 +1,5 @@
+suites_to_run:
+  - config/suites/tcg_pseries_bringup.yaml
+  - config/suites/nested_kvm_pseries_bringup.yaml
+  - config/suites/nested_kvm_pseries_bringdown.yaml
+  - config/suites/tcg_pseries_bringdown.yaml

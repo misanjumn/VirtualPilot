@@ -22,7 +22,7 @@ params:
   cpu: POWER11
   qcow_path: small-fedora43.qcow2
   os_variant: fedora41
-  name: fedora43-virtualpilot-kvm-pseries
+  name: fedora43-virtualpilot-nested-kvm-pseries
   username: root
   password: "123456"
   qemu-extra-args: ""

@@ -15,5 +15,5 @@ params:
   scp_guest: false
   cleanup: true
 
-  name: fedora43-virtualpilot-kvm-pseries
+  name: fedora43-virtualpilot-nested-kvm-pseries
   accelerator: kvm
