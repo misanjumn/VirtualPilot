@@ -12,6 +12,8 @@ params:
   host_script: src/guest_bringup.py
   host_suite: config/suites/nested_kvm_pseries_bringup.yaml
   nested_guest_image: guests/qcows/small-fedora43.qcow2
+  scp_guest: true
+  cleanup: true
 
   accelerator: kvm
   machine: pseries
@@ -24,6 +26,7 @@ params:
   username: root
   password: "123456"
   qemu-extra-args: ""
+  features: ""
   host_kernel: false
   kernel: null
   initrd: null

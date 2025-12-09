@@ -15,6 +15,8 @@ DEFAULTS = {
     'host_script': 'src/guest_bringup.py',
     'host_suite': 'config/suites/nested_kvm_pseries_bringup.yaml',
     'nested_guest_image': 'guests/qcows/small-fedora43.qcow2',
+    'scp_guest': True,
+    'cleanup': True
 }
 
 
@@ -31,7 +33,7 @@ def get_l0_ip(cfg):
     """
     try:
         print(f"Getting IP address of L0 VM: {cfg['l0_name']}")
-        cmd = f"virsh domifaddr {cfg['l0_name']} --source agent --interface virbr0 --full"
+        cmd = f"virsh domifaddr {cfg['l0_name']} --source agent"
         result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=10)
         if result.returncode != 0:
             return False, f"Failed to run virsh domifaddr: {result.stderr.strip()}"
@@ -42,6 +44,8 @@ def get_l0_ip(cfg):
                 for part in parts:
                     if '/' in part:
                         ip = part.split('/')[0]
+                        if ip.startswith("127."):
+                            continue
                         print(f"Found L0 IP: {ip}")
                         return True, ip
         print("No IP address found in virsh domifaddr output")
@@ -68,10 +72,13 @@ def scp_to_l0(cfg, ip_addr):
         files_to_copy = [
             (cfg['host_virtualpilot'], os.path.join(cfg['l0_location'], os.path.basename(cfg['host_virtualpilot']))),
             (cfg['host_orchestrator'], os.path.join(cfg['l0_location'], os.path.basename(cfg['host_orchestrator']))),
-            (cfg['nested_guest_image'], os.path.join(cfg['l0_location'], os.path.basename(cfg['nested_guest_image']))),
             (cfg['host_script'], os.path.join(cfg['l0_location'], os.path.basename(cfg['host_script']))),
             (cfg['host_suite'], os.path.join(cfg['l0_location'], os.path.basename(cfg['host_suite'])))
         ]
+        if cfg.get('scp_guest', True):
+            files_to_copy.append(
+                (cfg['nested_guest_image'], os.path.join(cfg['l0_location'], os.path.basename(cfg['nested_guest_image'])))
+            )
 
         scp = SCPClient(ssh.get_transport())
         for src, dest in files_to_copy:
@@ -162,6 +169,9 @@ def cleanup_l0(cfg, ip_addr):
     """
     Cleanup files on l0_location
     """
+    if cfg.get('cleanup', True) is False:
+        print("Cleanup skipped as per configuration")
+        return True, None
     try:
         ssh = create_ssh_client(ip_addr, cfg['l0_username'], cfg['l0_password'])
         cmd = f"rm -rf {cfg['l0_location']}*"

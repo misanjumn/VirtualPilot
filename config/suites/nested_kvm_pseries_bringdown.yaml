@@ -12,6 +12,8 @@ params:
   host_script: src/guest_bringdown.py
   host_suite: config/suites/nested_kvm_pseries_bringdown.yaml
   nested_guest_image: guests/qcows/small-fedora43.qcow2
+  scp_guest: false
+  cleanup: true
 
   name: fedora43-virtualpilot-kvm-pseries
   accelerator: kvm
